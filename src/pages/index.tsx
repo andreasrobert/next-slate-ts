@@ -8,13 +8,15 @@ import {
   Transforms,
   Editor,
   Element as SlateElement,
+  Text as SlateText,
 } from "slate";
 
 // Import the Slate components and React plugin.
-import { Slate, Editable, withReact, ReactEditor } from "slate-react";
+import { Slate, Editable, withReact, ReactEditor, RenderLeafProps } from "slate-react";
 
-type CustomElement = { type: "paragraph" | "code"; children: CustomText[] };
-type CustomText = { text: string };
+type ElementType = "paragraph" | "code";
+type CustomElement = { type: ElementType; children: CustomText[] };
+type CustomText = { text: string; bold?: boolean };
 
 declare module "slate" {
   interface CustomTypes {
@@ -44,25 +46,46 @@ export default function Home() {
     }
   }, []);
 
+  const renderLeaf = useCallback((props: RenderLeafProps) => {
+    return <Leaf {...props} />;
+  }, []);
+
   return (
     <main>
       <div className="container">
         <Slate editor={editor} value={initialValue}>
           <Editable
             renderElement={renderElement}
+            renderLeaf={renderLeaf}
             onKeyDown={(event) => {
-              if (event.key === "`" && event.ctrlKey) {
-                event.preventDefault();
-                // Determine whether any of the currently selected blocks are code blocks.
-                const [match] = Editor.nodes(editor, {
-                  match: (n) => SlateElement.isElement(n) && n.type === "code",
-                });
-                // Toggle the block type depending on whether there's already a match.
-                Transforms.setNodes(
-                  editor,
-                  { type: match ? "paragraph" : "code" },
-                  { match: (n) => SlateElement.isElement(n) && Editor.isBlock(editor, n) }
-                );
+              if (!event.ctrlKey) {
+                return;
+              }
+              switch (event.key) {
+                case "`":
+                  event.preventDefault();
+                  // Determine whether any of the currently selected blocks are code blocks.
+                  const [match] = Editor.nodes(editor, {
+                    match: (n) => SlateElement.isElement(n) && n.type === "code",
+                  });
+                  // Toggle the block type depending on whether there's already a match.
+                  Transforms.setNodes(
+                    editor,
+                    { type: match ? "paragraph" : "code" },
+                    { match: (n) => SlateElement.isElement(n) && Editor.isBlock(editor, n) }
+                  );
+                  break;
+
+                case "b":
+                  event.preventDefault();
+                  Transforms.setNodes(
+                    editor,
+                    { bold: true },
+                    // Apply it to text nodes, and split the text node up if the
+                    // selection is overlapping only part of it.
+                    { match: (n) => SlateText.isText(n), split: true }
+                  );
+                  break;
               }
             }}
           />
@@ -87,4 +110,12 @@ const CodeElement = (props: CodeElementProps) => {
 
 const DefaultElement = (props: CodeElementProps) => {
   return <p {...props.attributes}>{props.children}</p>;
+};
+
+const Leaf = (props: RenderLeafProps) => {
+  return (
+    <span {...props.attributes} style={{ fontWeight: props.leaf.bold ? "bold" : "normal" }}>
+      {props.children}
+    </span>
+  );
 };
