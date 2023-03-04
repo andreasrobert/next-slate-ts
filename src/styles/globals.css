@@ -11,13 +11,8 @@ body {
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  display: flex;
+  flex-direction: column;
 }
 
 a {
@@ -25,3 +20,12 @@ a {
   text-decoration: none;
 }
 
+main {
+  padding: 10em;
+}
+
+.container {
+  margin: auto;
+  border: black 1px solid;
+  padding: 1em;
+}
