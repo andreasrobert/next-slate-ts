@@ -14,7 +14,9 @@ pnpm dev
 
 ## Editor Features
 
-[x] Press ``ctrl +  ` `` to change to code block or back to paragraph 
-[x] Press ``ctrl +  b `` while selecting text to toggle bold formatting or back to normal
+- Press ``ctrl +  ` `` to change to code block or back to paragraph 
+
+
+- Press ``ctrl +  b `` while selecting text to toggle bold formatting or back to normal
 
 
