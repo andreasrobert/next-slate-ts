@@ -114,6 +114,11 @@ export default function Home() {
           />
         </Slate>
       </div>
+      <h2>Things you can do</h2>
+      <ul>
+        <li>Click ctrl + ` to toggle code block.</li>
+        <li>Click ctrl + b to toggle bold.</li>
+      </ul>
     </main>
   );
 }

@@ -24,6 +24,10 @@ main {
   padding: 10em;
 }
 
+h2{
+  margin: 1em 0 0.2em;
+}
+
 .container {
   margin: auto;
   border: black 1px solid;
