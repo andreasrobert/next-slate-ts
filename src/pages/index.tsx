@@ -16,7 +16,15 @@ import { Slate, Editable, withReact, ReactEditor, RenderLeafProps } from "slate-
 
 type ElementType = "paragraph" | "code" | null;
 type CustomElement = { type: ElementType; children: CustomText[] };
-type CustomText = { text: string; bold?: boolean };
+type FormatType = {
+  bold?: boolean;
+  code?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+};
+type CustomText = {
+  text: string;
+} & FormatType;
 
 declare module "slate" {
   interface CustomTypes {
@@ -27,13 +35,19 @@ declare module "slate" {
 }
 
 const CustomEditor = {
-  isBoldMarkActive(editor: Editor) {
-    const [match] = Editor.nodes(editor, {
-      match: (n) => SlateText.isText(n) && n.bold === true,
-      universal: true,
-    });
+  isMarkActive(editor: Editor, format: keyof FormatType) {
+    const marks = Editor.marks(editor);
+    return marks ? marks[format] === true : false;
+  },
 
-    return !!match;
+  toggleMark(editor: Editor, format: keyof FormatType) {
+    const isActive = CustomEditor.isMarkActive(editor, format);
+
+    if (isActive) {
+      Editor.removeMark(editor, format);
+    } else {
+      Editor.addMark(editor, format, true);
+    }
   },
 
   isCodeBlockActive(editor: Editor) {
@@ -42,15 +56,6 @@ const CustomEditor = {
     });
 
     return !!match;
-  },
-
-  toggleBoldMark(editor: Editor) {
-    const isActive = CustomEditor.isBoldMarkActive(editor);
-    Transforms.setNodes(
-      editor,
-      { bold: isActive ? false : true },
-      { match: (n) => SlateText.isText(n), split: true }
-    );
   },
 
   toggleCodeBlock(editor: Editor) {
@@ -66,7 +71,28 @@ const CustomEditor = {
 const initialValue: Descendant[] = [
   {
     type: "paragraph",
-    children: [{ text: "A line of text in a paragraph." }],
+    children: [
+      { text: "To use this editor you can highlight a text and...  \n\n" },
+      { text: "Click ctrl + b to toggle"},
+      { text: " BOLD ", bold: true },
+      { text: "formating \n" },
+
+      { text: "Click ctrl + i to toggle"},
+      { text: " ITALIC ", italic: true },
+      { text: "formating \n" },
+
+      { text: "Click ctrl + u to toggle"},
+      { text: " UNDERLINE ", underline: true },
+      { text: "formating \n" },
+      
+      { text: "Click ctrl + t to toggle "},
+      { text: "CODE", code: true },
+      { text: " formating \n" },
+
+      { text: "Click ctrl + ` to toggle "},
+      { text: "CODE BLOCK", code: true },
+      { text: " formating" },
+    ],
   },
 ];
 
@@ -106,7 +132,25 @@ export default function Home() {
 
                 case "b": {
                   event.preventDefault();
-                  CustomEditor.toggleBoldMark(editor);
+                  CustomEditor.toggleMark(editor, "bold");
+                  break;
+                }
+
+                case "i": {
+                  event.preventDefault();
+                  CustomEditor.toggleMark(editor, "italic");
+                  break;
+                }
+
+                case "u": {
+                  event.preventDefault();
+                  CustomEditor.toggleMark(editor, "underline");
+                  break;
+                }
+
+                case "t": {
+                  event.preventDefault();
+                  CustomEditor.toggleMark(editor, "code");
                   break;
                 }
               }
@@ -115,9 +159,13 @@ export default function Home() {
         </Slate>
       </div>
       <h2>Things you can do</h2>
+      <p>Highlight a text and...</p>
       <ul>
-        <li>Click ctrl + ` to toggle code block.</li>
-        <li>Click ctrl + b to toggle bold.</li>
+        <li>Click <code>ctrl + b</code> to toggle bold.</li>
+        <li>Click <code>ctrl + i</code> to toggle italic.</li>
+        <li>Click <code>ctrl + u</code> to toggle underline.</li>
+        <li>Click <code>ctrl + t</code> to toggle code.</li>
+        <li>Click <code>ctrl + `</code> to toggle code block.</li>
       </ul>
     </main>
   );
@@ -135,10 +183,22 @@ const DefaultElement = (props: RenderLeafProps) => {
   return <p {...props.attributes}>{props.children}</p>;
 };
 
-const Leaf = (props: RenderLeafProps) => {
-  return (
-    <span {...props.attributes} style={{ fontWeight: props.leaf.bold ? "bold" : "normal" }}>
-      {props.children}
-    </span>
-  );
+const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
+  if (leaf.bold) {
+    children = <strong>{children}</strong>;
+  }
+
+  if (leaf.code) {
+    children = <code>{children}</code>;
+  }
+
+  if (leaf.italic) {
+    children = <em>{children}</em>;
+  }
+
+  if (leaf.underline) {
+    children = <u>{children}</u>;
+  }
+
+  return <span {...attributes}>{children}</span>;
 };
